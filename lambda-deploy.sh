@@ -14,6 +14,8 @@ DEVELOP_DIR=$SCRIPTS_DIR/develop
 ZIP_DIR=$DATA_DIR/zip
 DEPLOY_DIR=$DATA_DIR/deploy
 PYTHON_DIR=$DATA_DIR/python
+MEMORY_SIZE=512
+TIMEOUT=300
 
 function initialize() {
     if [ "${LAMBDA_FUNCTION_NAME}" == "" ]; then
@@ -40,10 +42,15 @@ function create_lambda_layer_zip() {
     WORK_DIR=$(realpath $HOME_DIR)
     # cp $HOME_DIR/bin/chromedriver.zip data/python
     # cp $HOME_DIR/bin/headless-chromium.zip data/python
-    docker run --rm -v $WORK_DIR:/var/task amazon/aws-sam-cli-build-image-python3.8:latest \
+    docker run --rm -v $WORK_DIR:/var/task amazon/aws-sam-cli-build-image-python3.9:latest \
         bash -c "\
         pip install -r scripts/develop/requirements/prod.txt -t local/data/python && \
         (cd /var/task/local/data; zip -r zip/python.zip python)"
+    # docker run --rm -v $WORK_DIR:/var/task amaffiscripts:latest \
+    #     bash -c "\
+    #     pip install --upgrade pip &&\
+    #     pip install -r /var/task/scripts/develop/requirements/prod.txt -t /var/task/local/data/python &&\
+    #     (cd /var/task/local/data; zip -r zip/python.zip python)"
 }
 
 function create_lambda_zip() {
@@ -65,6 +72,11 @@ function update_lambda_function() {
     aws lambda update-function-code \
         --function-name ${LAMBDA_FUNCTION_NAME} \
         --zip-file fileb://$ZIP_DIR/lambda_function.zip
+
+    aws lambda update-function-configuration \
+        --function-name ${LAMBDA_FUNCTION_NAME} \
+        --memory-size ${MEMORY_SIZE} \
+        --timeout ${TIMEOUT}
 
     # レイヤーが指定されている場合のみレイヤーを紐づける
     if [ "${LAMBDA_LAYER_ARN}" != "" ]; then
