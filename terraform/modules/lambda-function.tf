@@ -1,7 +1,3 @@
-provider "aws" {
-  region  = "ap-northeast-1"
-}
-
 variable "existing_event_rule_arn" {
   description = "The ARN of the existing EventBridge rule"
   type        = string
