@@ -1,0 +1,14 @@
+version: '3'
+services:
+  terraform:
+    image: hashicorp/terraform:latest
+    container_name: terraform
+    volumes:
+      - ../../:/app
+    environment:
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - SECRET_PATH=${SECRET_PATH}
+    working_dir: /app
+    # /app/scripts/deploy/setup.shを実行する
+    entrypoint: ["/bin/sh", "-c", "ls -la /app/scripts/deploy/setup.sh && /app/scripts/deploy/setup.sh"]
