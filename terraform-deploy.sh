@@ -8,7 +8,7 @@ docker-compose -f $base/docker-compose.yml run --rm --entrypoint "sh" terraform 
     " \
     apk update \
     && apk add jq \
-    && cd scripts/deploy/terraform/lambda \
+    && cd scripts/deploy/terraform/lambda/affiliate-bot \
     && terraform init \
     && terraform plan \
     && terraform apply -auto-approve \
