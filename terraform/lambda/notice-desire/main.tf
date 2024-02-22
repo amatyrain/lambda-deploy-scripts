@@ -15,7 +15,7 @@ module "notice-desire" {
   source = "../../modules"
 
   scripts_path = "${path.module}/../../.."
-  existing_event_rule_arn = "arn:aws:events:ap-northeast-1:408633466991:rule/hourly"
+  event_bridge_rule_name = "hourly"
   aws_lambda_function_name = "notice-desire"
   aws_lambda_layer_arn = "arn:aws:lambda:ap-northeast-1:408633466991:layer:amazonAffiliateLayer:16"
   aws_lambda_handler = "lambda_function.notice_desire"

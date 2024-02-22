@@ -1,5 +1,5 @@
-variable "existing_event_rule_arn" {
-  description = "The ARN of the existing EventBridge rule"
+variable "event_bridge_rule_name" {
+  description = "The name of the EventBridge rule"
   type        = string
 }
 
@@ -47,6 +47,16 @@ variable "scripts_path" {
 
 }
 
+data "terraform_remote_state" "event_bridge" {
+  backend = "s3"
+
+  config = {
+    bucket  = "consel-terraform"
+    key    = "event-bridge-${var.event_bridge_rule_name}.tfstate"
+    region = "ap-northeast-1"
+  }
+}
+
 data "archive_file" "function_zip" {
   type        = "zip"
   source_dir  = var.source_dir
@@ -73,18 +83,6 @@ resource "aws_lambda_function" "aws_lambda_function" {
   }
 }
 
-# EventBridgeルールのimport
-# import {
-#   to = aws_cloudwatch_event_rule.hourly
-#   id = "default/hourly"
-# }
-
-# EventBridgeルールの作成
-resource "aws_cloudwatch_event_rule" "rule" {
-  name        = "hourly"
-  schedule_expression = "cron(0 * * * ? *)"
-}
-
 # Lambda関数への権限付与のimport
 # import {
 #   to = aws_lambda_permission.allow_cloudwatch
@@ -97,12 +95,13 @@ resource "aws_lambda_permission" "allow_cloudwatch" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.aws_lambda_function.function_name
   principal     = "events.amazonaws.com"
-  source_arn    = aws_cloudwatch_event_rule.rule.arn
+  source_arn    = data.terraform_remote_state.event_bridge.outputs.rule_arn
 }
+
 
 # EventBridgeルールとLambda関数の紐づけ
 resource "aws_cloudwatch_event_target" "example_target" {
-  rule      = aws_cloudwatch_event_rule.rule.name
+  rule      = data.terraform_remote_state.event_bridge.outputs.rule_name
   arn       = aws_lambda_function.aws_lambda_function.arn
 }
 
