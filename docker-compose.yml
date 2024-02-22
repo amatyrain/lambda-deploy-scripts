@@ -6,8 +6,8 @@ services:
     volumes:
       - ../../:/app
     environment:
-      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID_TF}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY_TF}
       - SECRET_PATH=${SECRET_PATH}
       - RESOURCE_DIR=${RESOURCE_DIR}
     working_dir: /app
