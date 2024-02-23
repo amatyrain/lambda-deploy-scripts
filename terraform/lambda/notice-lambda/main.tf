@@ -16,6 +16,8 @@ module "notice-lambda" {
 
   scripts_path = "${path.module}/../../.."
   event_bridge_rule_name = ""
+  destination_tfstate_name = ""
+  aws_lambda_role_name = "lambda-role"
   aws_lambda_function_name = "notice-lambda"
   aws_lambda_layer_arn = ""
   aws_lambda_handler = "lambda_function.lambda_handler"
@@ -23,4 +25,8 @@ module "notice-lambda" {
   source_dir = "${path.module}/../../../../../src"
   output_zip_path = "${path.module}/../../../../../local/function.zip"
   runtime = "python3.11"
+}
+
+output "arn" {
+  value = module.notice-lambda.arn
 }

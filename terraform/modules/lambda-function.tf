@@ -21,6 +21,18 @@ variable "aws_lambda_layer_arn" {
   default = ""
 }
 
+# roleの名前
+variable "aws_lambda_role_name" {
+  description = "The name of the IAM role for the Lambda function"
+  type        = string
+}
+
+# 送信先のlambda関数名
+variable "destination_tfstate_name" {
+  description = "The name of the destination tfstate"
+  type        = string
+}
+
 variable "aws_lambda_timeout" {
   description = "The timeout for the Lambda function"
   type        = number
@@ -60,6 +72,26 @@ data "terraform_remote_state" "event_bridge" {
   }
 }
 
+data "terraform_remote_state" "destination" {
+  count = var.destination_tfstate_name != "" ? 1 : 0
+
+  backend = "s3"
+  config = {
+    bucket  = "consel-terraform"
+    key    = "${var.destination_tfstate_name}.tfstate"
+    region = "ap-northeast-1"
+  }
+}
+
+data "terraform_remote_state" "lambda_role" {
+  backend = "s3"
+  config = {
+    bucket  = "consel-terraform"
+    key    = "iam-role-${var.aws_lambda_role_name}.tfstate"
+    region = "ap-northeast-1"
+  }
+}
+
 data "archive_file" "function_zip" {
   type        = "zip"
   source_dir  = var.source_dir
@@ -76,13 +108,24 @@ resource "aws_lambda_function" "aws_lambda_function" {
   runtime          = var.runtime
   filename         = data.archive_file.function_zip.output_path
   source_code_hash = filebase64sha256(data.archive_file.function_zip.output_path)
-  role             = data.aws_iam_role.existing_role.arn
+  role             = data.terraform_remote_state.lambda_role.outputs.arn
   layers = var.aws_lambda_layer_arn != "" ? [var.aws_lambda_layer_arn] : []
   timeout = var.aws_lambda_timeout
   reserved_concurrent_executions = 1
 
   environment {
     variables = data.external.env_vars.result
+  }
+}
+
+resource "aws_lambda_function_event_invoke_config" "destination_config" {
+  count = var.destination_tfstate_name != "" ? 1 : 0
+  function_name = aws_lambda_function.aws_lambda_function.function_name
+
+  destination_config {
+    on_failure {
+      destination = data.terraform_remote_state.destination[count.index].outputs.arn
+    }
   }
 }
 
@@ -109,85 +152,11 @@ resource "aws_cloudwatch_event_target" "example_target" {
   arn       = aws_lambda_function.aws_lambda_function.arn
 }
 
-data "aws_iam_role" "existing_role" {
-  name = "read-only"
-}
-
-# resource "aws_iam_role" "lambda_role" {
-#   name = "read-only"
-
-#   assume_role_policy = <<EOF
-# {yes
-#     "Version": "2012-10-17",
-#     "Statement": [
-#         {
-#             "Effect": "Allow",
-#             "Principal": {
-#                 "Service": "lambda.amazonaws.com"
-#             },
-#             "Action": "sts:AssumeRole"
-#         }
-#     ]
-# }
-# EOF
-# }
-
-# 既存のポリシー1を参照
-data "aws_iam_policy" "existing_policy_1" {
-  arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-}
-
-# 既存のポリシー2を参照
-data "aws_iam_policy" "existing_policy_2" {
-  arn = "arn:aws:iam::aws:policy/ReadOnlyAccess"
-}
-
-# ポリシー1をロールにアタッチ
-resource "aws_iam_role_policy_attachment" "attach_policy_1" {
-  role       = data.aws_iam_role.existing_role.name
-  policy_arn = data.aws_iam_policy.existing_policy_1.arn
-}
-
-# ポリシー2をロールにアタッチ
-resource "aws_iam_role_policy_attachment" "attach_policy_2" {
-  role       = data.aws_iam_role.existing_role.name
-  policy_arn = data.aws_iam_policy.existing_policy_2.arn
-}
-
-# resource "aws_iam_policy" "lambda_policy" {
-#   name        = "example-lambda-policy"
-#   description = "IAM policy for the example Lambda function"
-
-#   policy = jsonencode({
-#     Version   = "2012-10-17"
-#     Statement = [
-#       {
-#         Effect   = "Allow"
-#         Action   = [
-#           "logs:CreateLogGroup",
-#           "logs:CreateLogStream",
-#           "logs:PutLogEvents"
-#         ]
-#         Resource = [
-#           aws_cloudwatch_log_group.example_log_group.arn,
-#           "${aws_cloudwatch_log_group.example_log_group.arn}:*"
-#         ]
-#       }
-#     ]
-#   })
-# }
-
-resource "aws_iam_role_policy_attachment" "lambda_policy_attachment_1" {
-  role       = data.aws_iam_role.existing_role.name
-  policy_arn = data.aws_iam_policy.existing_policy_1.arn
-}
-
-resource "aws_iam_role_policy_attachment" "lambda_policy_attachment_2" {
-  role       = data.aws_iam_role.existing_role.name
-  policy_arn = data.aws_iam_policy.existing_policy_2.arn
-}
-
 resource "aws_cloudwatch_log_group" "example_log_group" {
   name = "/aws/lambda/${aws_lambda_function.aws_lambda_function.function_name}"
   retention_in_days = 30
+}
+
+output "arn" {
+  value = aws_lambda_function.aws_lambda_function.arn
 }
