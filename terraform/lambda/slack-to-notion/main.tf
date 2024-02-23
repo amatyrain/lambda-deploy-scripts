@@ -12,7 +12,7 @@ terraform {
 }
 
 module "slack-to-notion" {
-  source = "../../modules"
+  source = "../../modules/lambda"
 
   scripts_path = "${path.module}/../../.."
   event_bridge_rule_name = "hourly"

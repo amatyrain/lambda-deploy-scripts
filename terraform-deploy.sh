@@ -10,6 +10,7 @@ docker-compose -f $base/docker-compose.yml run --rm --entrypoint "sh" terraform 
     && apk add jq \
     && cd scripts/deploy/terraform/$RESOURCE_DIR \
     && terraform init \
+    && terraform refresh \
     && terraform plan \
     && terraform apply -auto-approve \
     '
