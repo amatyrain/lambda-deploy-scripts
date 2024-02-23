@@ -1,6 +1,7 @@
 variable "event_bridge_rule_name" {
   description = "The name of the EventBridge rule"
   type        = string
+  default     = ""
 }
 
 variable "aws_lambda_function_name" {
@@ -17,6 +18,7 @@ variable "aws_lambda_handler" {
 variable "aws_lambda_layer_arn" {
   description = "The ARN of the Lambda layer"
   type        = string
+  default = ""
 }
 
 variable "aws_lambda_timeout" {
@@ -48,8 +50,9 @@ variable "scripts_path" {
 }
 
 data "terraform_remote_state" "event_bridge" {
-  backend = "s3"
+  count = var.event_bridge_rule_name != "" ? 1 : 0
 
+  backend = "s3"
   config = {
     bucket  = "consel-terraform"
     key    = "event-bridge-${var.event_bridge_rule_name}.tfstate"
@@ -74,7 +77,7 @@ resource "aws_lambda_function" "aws_lambda_function" {
   filename         = data.archive_file.function_zip.output_path
   source_code_hash = filebase64sha256(data.archive_file.function_zip.output_path)
   role             = data.aws_iam_role.existing_role.arn
-  layers = [var.aws_lambda_layer_arn]
+  layers = var.aws_lambda_layer_arn != "" ? [var.aws_lambda_layer_arn] : []
   timeout = var.aws_lambda_timeout
   reserved_concurrent_executions = 1
 
@@ -95,13 +98,14 @@ resource "aws_lambda_permission" "allow_cloudwatch" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.aws_lambda_function.function_name
   principal     = "events.amazonaws.com"
-  source_arn    = data.terraform_remote_state.event_bridge.outputs.rule_arn
+  count         = var.event_bridge_rule_name != "" ? 1 : 0
+  source_arn    = data.terraform_remote_state.event_bridge[count.index].outputs.rule_arn
 }
-
 
 # EventBridgeルールとLambda関数の紐づけ
 resource "aws_cloudwatch_event_target" "example_target" {
-  rule      = data.terraform_remote_state.event_bridge.outputs.rule_name
+  count     = var.event_bridge_rule_name != "" ? 1 : 0
+  rule      = data.terraform_remote_state.event_bridge[count.index].outputs.rule_name
   arn       = aws_lambda_function.aws_lambda_function.arn
 }
 
