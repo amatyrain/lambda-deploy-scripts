@@ -3,15 +3,18 @@
 set -e
 base=$(cd $(dirname $0); pwd)
 
-source $base/.env
-secret_env=$(realpath "$base/$SECRET_PATH")
-
 echo "リモートのシークレット一覧"
 gh secret list
 
 echo "ローカルのシークレット一覧"
 cat $base/.env
-cat $secret_env
+source $base/.env
+
+if [ "$SECRET_PATH" != "" ]; then
+  secret_env=$(realpath "$base/$SECRET_PATH")
+  cat $secret_env
+fi
+
 
 echo "上記の内容でリモートのシークレットを更新しますか？"
 read -p "y/n: " yn
@@ -21,5 +24,7 @@ case "$yn" in
 esac
 
 gh secret set -f $base/.env
-gh secret set -f $secret_env
+if [ "$SECRET_PATH" != "" ]; then
+  gh secret set -f $secret_env
+fi
 gh secret list
