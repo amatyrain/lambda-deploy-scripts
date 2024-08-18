@@ -3,7 +3,7 @@
 set -ex
 base=$(cd $(dirname $0); pwd;)
 
-docker-compose -f $base/docker-compose.yml run --rm --entrypoint "sh" terraform -c \
+docker compose -f $base/docker-compose.yml run --rm --entrypoint "sh" terraform -c \
     ' \
     printenv \
     && apk update \
