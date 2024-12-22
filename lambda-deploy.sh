@@ -1,13 +1,15 @@
 #!/bin/bash
 
 set -e
-base=$(cd $(dirname $0); pwd;)
+base=$(
+    cd $(dirname $0)
+    pwd
+)
 
 # 環境変数の読み込み
 source $base/.env
 
 HOME_DIR=$base/../..
-SECRET_DIR=$HOME_DIR/src/amaffiscripts/core/infrastructure/secret
 DATA_DIR=$HOME_DIR/local/data
 SRC_DIR=$HOME_DIR/src
 SCRIPTS_DIR=$HOME_DIR/scripts
@@ -17,6 +19,7 @@ DEPLOY_DIR=$DATA_DIR/deploy
 PYTHON_DIR=$DATA_DIR/python
 MEMORY_SIZE=1024
 TIMEOUT=600
+DOCKER_COMPOSE_LAMBDA_LAYER=$base/docker-compose.lambda-layer.yml
 
 function initialize() {
     if [ "${LAMBDA_FUNCTION_NAME}" == "" ]; then
@@ -43,11 +46,12 @@ function create_lambda_layer_zip() {
     WORK_DIR=$(realpath $HOME_DIR)
     # cp $HOME_DIR/bin/chromedriver.zip data/python
     # cp $HOME_DIR/bin/headless-chromium.zip data/python
-    docker run --rm -v $WORK_DIR:/var/task amazon/aws-sam-cli-build-image-python3.9:latest \
-        bash -c "\
-        pip install --upgrade pip && \
-        pip install -r scripts/develop/requirements/prod.txt -t local/data/python && \
-        (cd /var/task/local/data; zip -r zip/python.zip python)"
+    docker compose -f $DOCKER_COMPOSE_LAMBDA_LAYER up -d
+    docker exec -it lambda-layer pip install --upgrade pip
+    docker exec -it lambda-layer pip install -r scripts/develop/requirements/prod.txt -t local/data/python
+    docker exec -it lambda-layer bash -c "mkdir -p /app/local/data/zip && cd /app/local/data && zip -r zip/python.zip python"
+    docker compose -f $DOCKER_COMPOSE_LAMBDA_LAYER down
+
     # docker run --rm -v $WORK_DIR:/var/task amaffiscripts:latest \
     #     bash -c "\
     #     pip install --upgrade pip &&\
@@ -57,16 +61,19 @@ function create_lambda_layer_zip() {
 
 function create_lambda_zip() {
     cp -r $SRC_DIR/* $DEPLOY_DIR
-    (cd $DEPLOY_DIR; zip -r $ZIP_DIR/lambda_function.zip .)
+    (
+        cd $DEPLOY_DIR
+        zip -r $ZIP_DIR/lambda_function.zip .
+    )
 }
 
 function create_lambda_function() {
     aws lambda create-function \
-    --function-name ${LAMBDA_FUNCTION_NAME} \
-    --runtime ${RUNTIME} \
-    --role ${CREATE_LAMBDA_ROLE_ARN} \
-    --handler app.lambda_handler \
-    --zip-file fileb://$ZIP_DIR/lambda_function.zip
+        --function-name ${LAMBDA_FUNCTION_NAME} \
+        --runtime ${RUNTIME} \
+        --role ${CREATE_LAMBDA_ROLE_ARN} \
+        --handler app.lambda_handler \
+        --zip-file fileb://$ZIP_DIR/lambda_function.zip
 }
 
 function update_lambda_function() {
@@ -85,10 +92,10 @@ function update_lambda_function() {
     # レイヤーが指定されている場合のみレイヤーを紐づける
     if [ "${LAMBDA_LAYER_ARN}" != "" ]; then
         # Lambda関数のレイヤーの更新
-        latest_layer_version=$( \
+        latest_layer_version=$(
             aws lambda list-layer-versions \
                 --layer-name "${LAMBDA_LAYER_ARN}" \
-                --query 'LayerVersions[0].Version' --output text \
+                --query 'LayerVersions[0].Version' --output text
         )
 
         aws lambda update-function-configuration \
@@ -105,10 +112,10 @@ function update_lambda_function() {
     fi
 }
 
-# function create_lambda_layer() {
-#     aws lambda publish-layer-version \
-#         --layer-name ${LAMBDA_LAYER_NAME} \
-#         --description "lambda layer for moneyforward-2" \
-#         --license-info "MIT" \
-#         --zip-file fileb://$DATA_DIR/lambda_layer.zip
-# }
+function create_lambda_layer() {
+    aws lambda publish-layer-version \
+        --layer-name "${LAMBDA_LAYER_NAME}" \
+        --description "lambda layer" \
+        --license-info "MIT" \
+        --zip-file fileb://$DATA_DIR/zip/python.zip
+}

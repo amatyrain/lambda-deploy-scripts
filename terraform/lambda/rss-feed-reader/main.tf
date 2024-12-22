@@ -19,9 +19,9 @@ module "rss-feed-reader" {
   destination_tfstate_name = "lambda-notice-lambda"
   aws_lambda_role_name = "lambda-role"
   aws_lambda_function_name = "rss-feed-reader"
-  aws_lambda_layer_arn = "arn:aws:lambda:ap-northeast-1:408633466991:layer:amazonAffiliateLayer:19"
+  aws_lambda_layer_arn = "arn:aws:lambda:ap-northeast-1:408633466991:layer:rss-feed-reader:5"
   aws_lambda_handler = "app.lambda_handler"
-  aws_lambda_timeout = 600
+  aws_lambda_timeout = 900
   source_dir = "${path.module}/../../../../../src"
   output_zip_path = "${path.module}/../../../../../local/function.zip"
   runtime = "python3.11"

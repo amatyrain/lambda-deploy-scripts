@@ -1,16 +1,24 @@
 #!/bin/bash
 
 set -ex
-base=$(cd $(dirname $0); pwd;)
+base=$(
+    cd $(dirname $0)
+    pwd
+)
 
-docker compose -f $base/docker-compose.yml run --rm --entrypoint "sh" terraform -c \
-    ' \
-    printenv \
-    && apk update \
-    && apk add jq \
-    && cd scripts/deploy/terraform/$RESOURCE_DIR \
-    && terraform init \
-    && terraform refresh \
-    && terraform plan \
-    && terraform apply -auto-approve \
-    '
+set -a
+source $base/.env
+set +a
+
+tf_path=/app/scripts/deploy/terraform/$RESOURCE_DIR
+
+docker compose -f $base/terraform/docker-compose.yml up -d
+docker exec terraform ls
+docker exec terraform printenv
+docker exec terraform apk update
+docker exec terraform apk add jq
+docker exec terraform sh -c "cd $tf_path && terraform init"
+docker exec terraform sh -c "cd $tf_path && terraform refresh"
+docker exec terraform sh -c "cd $tf_path && terraform plan"
+docker exec terraform sh -c "cd $tf_path && terraform apply -auto-approve"
+docker compose -f $base/terraform/docker-compose.yml down
