@@ -37,15 +37,12 @@ resource "aws_iam_role_policy" "github_actions_deploy" {
       {
         Effect = "Allow"
         Action = [
-          "lambda:UpdateFunctionCode",
-          "lambda:UpdateFunctionConfiguration",
-          "lambda:GetFunction",
-          "lambda:GetFunctionConfiguration",
-          "lambda:CreateFunction",
-          "lambda:DeleteFunction",
-          "logs:CreateLogGroup",
-          "logs:CreateLogStream",
-          "logs:PutLogEvents"
+          "events:*",
+          "logs:*",
+          "lambda:*",
+          "s3:*",
+          "iam:*",
+          "ssm:*"
         ]
         Resource = "*"
       }

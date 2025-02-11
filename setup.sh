@@ -12,4 +12,4 @@ rm -f ../modules/iam/terraform-additional-policy.tf
 # Terraform実行
 terraform init
 terraform plan
-terraform apply
+terraform apply -auto-approve

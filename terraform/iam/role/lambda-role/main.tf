@@ -42,6 +42,8 @@ resource "aws_iam_policy" "lambda_policy" {
           "logs:CreateLogStream",
           "logs:PutLogEvents",
           "lambda:InvokeFunction",
+          "ssm:GetParameter",
+          "ssm:GetParameters"
         ]
         Resource = "*"
       }
