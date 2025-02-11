@@ -1,12 +1,15 @@
 #!/bin/bash
 
-# Create necessary directories
-mkdir -p scripts/deploy/terraform/iam
+# プロジェクトルートに移動
+cd /Users/consel/Sources/Github/schedule-deliver || exit
 
-# Navigate to terraform directory
+# Terraformディレクトリに移動
 cd scripts/deploy/terraform/iam || exit
 
-# Run terraform commands
+# 不要なポリシーファイルを削除
+rm -f ../modules/iam/terraform-additional-policy.tf
+
+# Terraform実行
 terraform init
 terraform plan
 terraform apply

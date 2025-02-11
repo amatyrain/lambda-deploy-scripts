@@ -13,5 +13,5 @@ terraform {
 
 module "iam" {
   source = "../modules/iam"
-  github_repository = "consel/schedule-deliver"
+  github_repository = "amatyrain/schedule-deliver"
 }
