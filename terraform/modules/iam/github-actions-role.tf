@@ -19,7 +19,10 @@ resource "aws_iam_role" "github_actions" {
         Condition = {
           StringEquals = {
             "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
-            "token.actions.githubusercontent.com:sub": "repo:${var.github_repository}:ref:refs/heads/develop"
+            "token.actions.githubusercontent.com:sub": [
+              "repo:consel/schedule-deliver:ref:refs/heads/develop",
+              "repo:consel/mini-scripts:ref:refs/heads/develop"
+            ]
           }
         }
       }
