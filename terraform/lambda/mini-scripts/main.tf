@@ -14,7 +14,7 @@ terraform {
 module "mini-scripts" {
   source = "../../modules/lambda"
 
-  scripts_path = "${path.module}/../../.."
+  scripts_path = "scripts/deploy"  # scripts/deployディレクトリへの相対パス
   event_bridge_rule_name = "hourly"  # Run every hour
   destination_tfstate_name = "lambda-notice-lambda"
   aws_lambda_role_name = "lambda-role"

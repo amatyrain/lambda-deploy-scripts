@@ -55,11 +55,6 @@ variable "runtime" {
 
 }
 
-variable "scripts_path" {
-  description = "The path to the scripts directory"
-  type        = string
-
-}
 
 data "terraform_remote_state" "event_bridge" {
   count = var.event_bridge_rule_name != "" ? 1 : 0
@@ -97,9 +92,15 @@ data "archive_file" "function_zip" {
   source_dir  = var.source_dir
   output_path = var.output_zip_path
 }
+variable "scripts_path" {
+  description = "The path to the scripts directory"
+  type        = string
+  default = "scripts/deploy"
+
+}
 
 data "external" "env_vars" {
-  program = ["/bin/sh", "${var.scripts_path}/env_to_json.sh"]
+  program = ["/bin/bash", "${path.module}/../../../../../${var.scripts_path}/env_to_json.sh"]
 }
 
 resource "aws_lambda_function" "aws_lambda_function" {
