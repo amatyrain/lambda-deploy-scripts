@@ -1,11 +1,11 @@
-resource "aws_iam_openid_connect_provider" "github" {
-  url             = "https://token.actions.githubusercontent.com"
-  client_id_list  = ["sts.amazonaws.com"]
-  thumbprint_list = ["6938fd4d98bab03faadb97b34396831e3780aea1"]
+data "aws_iam_openid_connect_provider" "github" {
+  url = "https://token.actions.githubusercontent.com"
 }
 
 resource "aws_iam_role" "github_actions" {
   name = "github-actions-role"
+  force_detach_policies = true
+  path = "/"  # 既存のロールのパスと一致させる
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -13,21 +13,23 @@ resource "aws_iam_role" "github_actions" {
       {
         Effect = "Allow"
         Principal = {
-          Federated = aws_iam_openid_connect_provider.github.arn
+          Federated = data.aws_iam_openid_connect_provider.github.arn
         }
         Action = "sts:AssumeRoleWithWebIdentity"
         Condition = {
-          StringEquals = {
-            "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
-            "token.actions.githubusercontent.com:sub": [
-              "repo:consel/schedule-deliver:ref:refs/heads/develop",
-              "repo:consel/mini-scripts:ref:refs/heads/develop"
-            ]
+          StringLike = {
+            "token.actions.githubusercontent.com:sub": ["repo:amatyrain/*"]
+            "token.actions.githubusercontent.com:aud": ["sts.amazonaws.com"]
           }
         }
       }
     ]
   })
+
+  # 既存のロールを維持するための設定
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "aws_iam_role_policy" "github_actions_deploy" {
@@ -55,6 +57,6 @@ resource "aws_iam_role_policy" "github_actions_deploy" {
 
 # Lambda基本実行ロールの追加
 resource "aws_iam_role_policy_attachment" "github_actions_lambda_execution" {
-  role       = aws_iam_role.github_actions.name
+  role       = aws_iam_role.github_actions.id
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
