@@ -10,7 +10,8 @@ set -a
 source $base/.env
 set +a
 
-tf_path=/app/scripts/deploy/terraform/$RESOURCE_DIR
+# パスを修正: /appからの相対パスに変更
+tf_path=/app/terraform/$RESOURCE_DIR
 
 docker compose -f $base/terraform/docker-compose.yml up -d
 docker exec terraform ls

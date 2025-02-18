@@ -1,15 +1,17 @@
 version: '3'
 services:
   terraform:
-    image: hashicorp/terraform:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: terraform
     volumes:
-      - ../../../:/app
+      - ..:/app
     environment:
-      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID_TF}
-      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY_TF}
-      - SECRET_PATH=${SECRET_PATH}
-      - RESOURCE_DIR=${RESOURCE_DIR}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_DEFAULT_REGION=ap-northeast-1
     working_dir: /app
     tty: true
     entrypoint: /bin/sh
+    command: -c "/bin/sh"

@@ -1,2 +1,18 @@
 .env
 *.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Lambda Layer
+**/layers/*/package/
+**/layers/*/layer.zip
+
+# Terraform
+.terraform/
+.terraform.lock.hcl
+terraform.tfstate
+terraform.tfstate.backup
+*.tfvars
