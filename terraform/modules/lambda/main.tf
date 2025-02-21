@@ -92,11 +92,11 @@ data "archive_file" "function_zip" {
   source_dir  = var.source_dir
   output_path = var.output_zip_path
 }
+
 variable "scripts_path" {
   description = "The path to the scripts directory"
   type        = string
   default = "scripts/deploy"
-
 }
 
 data "external" "env_vars" {

@@ -1,5 +1,5 @@
-requests==2.31.0
-boto3==1.28.44
+requests
+boto3
 tweepy
 amazon-paapi5
 pyyaml
@@ -9,15 +9,8 @@ beautifulsoup4
 xmltodict
 twitter-text-parser
 Pillow
-
-# For threads-api
-# threads-api
-# requests >= 2.26.0
-# pytest >= 6.2.4
-# pytest-asyncio >= 0.15.1
-# aiohttp >= 3.8.4
-# cryptography >= 41.0.2
-# instagrapi >= 1.17.13
-# pillow >= 10.0.0
-# colorama >= 0.4.6
-# cffi
+httpx
+pyautogui
+# google-genai
+# pydantic==1.10.13
+# pydantic-core==1.10.1
