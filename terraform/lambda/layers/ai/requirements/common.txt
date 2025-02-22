@@ -1,0 +1,8 @@
+httpx
+urllib3
+pyyaml
+boto3
+python-dotenv
+pytz
+pydantic==2.6.1
+pydantic-core==2.16.2

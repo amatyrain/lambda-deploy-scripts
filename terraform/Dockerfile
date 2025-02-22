@@ -8,7 +8,8 @@ RUN apk add --no-cache \
     bash \
     gcc \
     musl-dev \
-    linux-headers
+    linux-headers \
+    jq
 
 # Set working directory
 WORKDIR /app

@@ -16,9 +16,9 @@ variable "aws_lambda_handler" {
 }
 
 variable "aws_lambda_layer_arn" {
-  description = "The ARN of the Lambda layer"
-  type        = string
-  default = ""
+  description = "The ARN of the Lambda layer(s)"
+  type        = list(string)
+  default     = []
 }
 
 # roleの名前
@@ -110,8 +110,8 @@ resource "aws_lambda_function" "aws_lambda_function" {
   filename         = data.archive_file.function_zip.output_path
   source_code_hash = filebase64sha256(data.archive_file.function_zip.output_path)
   role             = data.terraform_remote_state.lambda_role.outputs.arn
-  layers = var.aws_lambda_layer_arn != "" ? [var.aws_lambda_layer_arn] : []
-  timeout = var.aws_lambda_timeout
+  layers           = var.aws_lambda_layer_arn
+  timeout          = var.aws_lambda_timeout
   reserved_concurrent_executions = 1
 
   environment {

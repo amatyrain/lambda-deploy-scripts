@@ -1,0 +1,1 @@
+Layer containing ai related libraries: boto3,httpx,pydantic-core==2.16.2-r common.txt,pydantic==2.6.1,python-dotenv,pytz,pyyaml,urllib3
